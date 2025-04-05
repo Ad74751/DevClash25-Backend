@@ -52,6 +52,33 @@ contract LandRegistry {
         );
         return landCount;
     }
+    function getLand(uint256 _landId) public view returns(
+        uint256,
+        string memory,
+        uint256,
+        uint256,
+        string memory,
+        string memory,
+        string memory,
+        address
+    ){
+        require(_landId >0 && _landId <= landCount,"land not found");
+        Land memory land =lands[_landId];
+        return(
+            land.id,
+            land.landAddress,
+            land.pincode,
+            land.area,
+            land.surveyNumber,
+            land.landType,
+            land.documentCID,
+            land.landImageCID,
+            land.owner
+        );
+    }
+    
+    
+    }
 
     function getLand(
         uint256 _landId
