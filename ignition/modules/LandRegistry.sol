@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-contract LandRegistry{
+contract LandRegistry {
     struct Land {
         uint256 id;
         string landAddress;
@@ -13,6 +13,7 @@ contract LandRegistry{
         string documentCID;
         string landImageCID;
         bool isUndisputed;
+        bool exists;
     }
 
     uint256 public landCount;
@@ -46,10 +47,122 @@ contract LandRegistry{
             _landType,
             _documentCID,
             _landImageCID,
-            _isUndisputed
+            _isUndisputed,
+            true
         );
-        return landCount;   
+        return landCount;
     }
 
+    function getLand(
+        uint256 _landId
+    )
+        public
+        view
+        returns (
+            uint256,
+            string memory,
+            uint256,
+            uint256,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            address
+        )
+    {
+        require(_landId > 0 && _landId <= landCount, "Land not found");
+        Land memory land = lands[_landId];
+        return (
+            land.id,
+            land.landAddress,
+            land.pincode,
+            land.area,
+            land.surveyNumber,
+            land.landType,
+            land.documentCID,
+            land.landImageCID,
+            land.owner
+        );
+    }
 
+    function getLandsByOwner(
+        address _owner
+    ) public view returns (Land[] memory) {
+        uint256 count = 0;
+
+        for (uint256 i = 1; i <= landCount; i++) {
+            if (lands[i].owner == _owner) {
+                count++;
+            }
+        }
+        Land[] memory result = new Land[](count);
+        uint256 index = 0;
+        for (uint256 i = 1; i <= landCount; i++) {
+            if (lands[i].owner == _owner) {
+                result[index] = lands[i];
+                index++;
+            }
+        }
+        return result;
+    }
+
+    function searchLand(
+        string memory _address,
+        string memory _surveyNumber
+    ) public view returns (Land[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 1; i <= landCount; i++) {
+            if (lands[i].exists) {
+                bool m = true;
+                if (bytes(_address).length > 0) {
+                    
+                    if (
+                        keccak256(bytes(lands[i].landAddress)) !=
+                        keccak256(bytes(_address))
+                    ) {
+                        m = false;
+                    }
+                }
+                if (bytes(_surveyNumber).length > 0) {
+                    if (
+                        keccak256(bytes(lands[i].surveyNumber)) !=
+                        keccak256(bytes(_surveyNumber))
+                    ) {
+                        m = false;
+                    }
+                }
+                if (m) {
+                    count++;
+                }
+            }
+        }
+        Land[] memory result = new Land[](count);
+        uint256 index = 0;
+        for (uint256 i = 1; i <= landCount; i++) {
+            if (lands[i].exists) {
+                bool m = true;
+                if (bytes(_address).length > 0) {
+                    if (
+                        keccak256(bytes(lands[i].landAddress)) !=
+                        keccak256(bytes(_address))
+                    ) {
+                        m = false;
+                    }
+                }
+                if (bytes(_surveyNumber).length > 0) {
+                    if (
+                        keccak256(bytes(lands[i].surveyNumber)) !=
+                        keccak256(bytes(_surveyNumber))
+                    ) {
+                        m = false;
+                    }
+                }
+                if (m) {
+                    result[index] = lands[i];
+                    index++;
+                }
+            }
+        }
+        return result;
+    }
 }
