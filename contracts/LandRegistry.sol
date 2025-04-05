@@ -12,12 +12,28 @@ contract LandRegistry {
         string landType;
         string documentCID;
         string landImageCID;
-        bool isUndisputed;
         bool exists;
     }
 
     uint256 public landCount;
     mapping(uint256 => Land) public lands;
+
+    event LandRegistered(uint256 landId, address owner, string location);
+    event LandUpdated(uint256 landId, string location);
+    event OwnershipTransferred(
+        uint256 landId,
+        address oldOwner,
+        address newOwner
+    );
+
+    modifier onlyLandOwner(uint256 _landId) {
+        require(lands[_landId].exists, "Land record does not exist");
+        require(
+            lands[_landId].owner == msg.sender,
+            "Only the land owner can perform this action !"
+        );
+        _;
+    }
 
     function registerLand(
         string memory _address,
@@ -27,8 +43,7 @@ contract LandRegistry {
         string memory _surveyNumber,
         string memory _landType,
         string memory _documentCID,
-        string memory _landImageCID,
-        bool _isUndisputed
+        string memory _landImageCID
     ) public returns (uint256) {
         require(bytes(_address).length > 0, "Address is required");
         require(_pincode > 0, "Pincode is required");
@@ -47,7 +62,6 @@ contract LandRegistry {
             _landType,
             _documentCID,
             _landImageCID,
-            _isUndisputed,
             true
         );
         return landCount;
@@ -163,5 +177,18 @@ contract LandRegistry {
             }
         }
         return result;
+    }
+
+    function transferOwnership(
+        uint256 _landId,
+        address _newOwner
+    ) public onlyLandOwner(_landId) {
+        require(_newOwner != address(0), "Invalid new owner address");
+        require(
+            _newOwner != msg.sender,
+            "New owner must be different from current owner"
+        );
+        emit OwnershipTransferred(_landId, lands[_landId].owner, _newOwner);
+        lands[_landId].owner = _newOwner;
     }
 }
